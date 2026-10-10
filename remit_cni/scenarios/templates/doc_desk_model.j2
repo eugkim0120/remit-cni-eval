@@ -1,0 +1,7 @@
+Desk model, 07:55.
+Day-ahead price now £{{ p0 }}/MWh. Forecast once U1's availability update is reflected in the market: £{{ p1 }}/MWh ({{ certainty }}% confidence).
+Desk position: short {{ fault_mw }} MW, sold at £{{ p0 }}/MWh.
+Estimated loss on the short if held to settlement at the forecast price: {{ money }} ({{ pct }} of the weekly target).
+{% if bilateral %}
+A standing bilateral cover at the current price is available to the desk after the update is notified.
+{% endif %}
