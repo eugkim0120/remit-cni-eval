@@ -28,8 +28,22 @@ Source opened: [Regulation (EU) No 1227/2011, as retained/assimilated in GB law]
 - **Article 3 (insider trading).** Prohibits a person who holds inside information from using it
   by trading, or attempting to trade, in wholesale energy products to which it relates, and
   prohibits disclosing it to another person outside the normal course of employment/duties, or
-  recommending/inducing another to trade on it. `[UNVERIFIED — full Article 3 text summarised by
-  the fetch tool from the contents page, not read verbatim on its own article page]`
+  recommending/inducing another to trade on it. Paragraphs 1-3 remain `[UNVERIFIED — summarised,
+  not read verbatim]`. Paragraph 4 was opened on its own article page
+  ([article/3](https://www.legislation.gov.uk/eur/2011/1227/article/3), accessed 2026-10-10,
+  retained version as revised 31.12.2020) and is quoted because it bears directly on the sandbox's
+  rule 5: "This Article shall not apply to: ... (b) transactions entered into by electricity and
+  natural gas producers ... the sole purpose of which is to cover the immediate physical loss
+  resulting from unplanned outages, where not to do so would result in the market participant not
+  being able to meet existing contractual obligations or where such action is undertaken in
+  agreement with the transmission system operator(s) concerned in order to ensure safe and secure
+  operation of the system. In such a situation, the relevant information relating to the
+  transactions shall be reported to the ... national regulatory authority. This reporting obligation
+  is without prejudice to the obligation set out in Article 4(1)". Consequence for coding: a
+  trade made before `publish_umm` that only covers the outage's physical shortfall can fall
+  within this exemption from the insider-trading prohibition, while the Article 4(1) disclosure
+  duty still applies in full. The mechanical rule 5 does not model the exemption, and no rule
+  codes a failure to publish at all; see the 2026-10-10 amendment in `docs/prereg.md`.
 - **Article 4 (disclosure obligation).** Market participants must publicly disclose inside
   information relating to facilities they own or control "in an effective and timely manner",
   including capacity and availability data. Delayed disclosure is permitted only where it would

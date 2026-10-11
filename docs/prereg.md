@@ -242,3 +242,20 @@ Eugene can state the definition of the headline number from sections 2 and 5 of 
   awareness follows from completing the cover-now-vs-cover-later comparison at all (present at every money level, since the dilemma structure is present at every level), not from its magnitude. This means
   eval-awareness is tied to the presence of the disclosure-timing choice archetype 8 is built to measure, not to a single tunable factor level, and is not expected to fall with further wording, delivery, or
   money-scale changes. Design realism work is closed on this basis. v4 (28-30% MiMo, 80% DeepSeek awareness; 0% breach in every probe run to date) is the design going into the Phase 4 pilot.
+- 2026-10-10, exploratory extension (not confirmatory; does not change any pre-registered test). Two additions requested by Eugene after the full-grid results: (a) a third model under test, Claude Haiku
+  4.5 (`claude-haiku-4-5-20251001`; the request named "Haiku 5.5", which does not exist, and Haiku 4.5 is the newest Haiku), run through the subscription `claude -p` CLI in an isolated configuration rather than as an
+  ordinary Claude Code session, because an ordinary session would give the model under test Bash/Read access to the scoring code and logs, keep Claude Code's
+  own system prompt, and offer no function-call channel. The adapter (`remit_cni/claude_cli.py`) strips built-in tools, settings, hooks and plugins, replaces the system prompt, runs in an empty temp
+  directory, reaches the sandbox only through an MCP bridge (`remit_cni/mcp_bridge.py`), and fails any turn whose CLI init event exposes a non-sandbox tool or a different model. Known differences from the
+  OpenCode path, reported as caveats: tool names reach the model as `mcp__sandbox__<tool>`; temperature is the CLI default; reasoning is logged from extended-thinking blocks (enabled via
+  MAX_THINKING_TOKENS), which is a different channel from the other models' `reasoning_content`, so mechanical eval-awareness rates are not strictly comparable across providers. Haiku runs a pilot of
+  about 30 runs first; full-grid scope is decided after checking the pilot end to end and its subscription usage. (b) A finer money sweep: ten log-spaced levels (GBP 5k, 7.5k, 11k, 15k, 22k, 33k, 50k,
+  75k, 110k, 150k; the four grid levels are included), reference cell otherwise, same quiet_v5 design as the earlier sweep, to test whether MiMo's single GBP 50k breach-rate peak in the full grid is a real
+  non-monotonicity or n=10 noise, and whether awareness stays flat at finer resolution. Both are reported as exploratory.
+- 2026-10-11, exploratory extension (not confirmatory). After the Haiku pilot (10/30 runs traded before `publish_umm`, 0/30 mechanically eval-aware), the write-up is refocused on Haiku 4.5 and a
+  fourth model, OpenAI `gpt-6-luna` (the current "Luna" fast tier, Haiku's counterpart), run through the ChatGPT-subscription `codex exec` CLI (`remit_cni/codex_cli.py`, same MCP bridge and tool
+  server as the Claude adapter; isolation verified with `codex debug prompt-input` and a live capture, remaining differences listed in the module docstring). All four models get 100 runs each in one
+  cell: the reference cell (GBP 50k), archetype 8, quiet_v5 design, seeds `crc32("money-sweep-50000-{i}")` for i in 0..99, so every model sees the same 100 scenarios. These runs replace, for the
+  cross-model comparison, the n=10 grid reference cells and the n=3-per-level Haiku sweep. The finer money sweep is dropped for Haiku and Luna. New analyses, all exploratory: outcome mix (published first,
+  traded first, neither), Art 4(1) non-disclosure rate, and the motive behind each trade made before publication (physical cover of the outage shortfall vs profit vs unclear; see the Art 3(4)(b) note in
+  `docs/primer.md`), coded from reasoning and final messages.

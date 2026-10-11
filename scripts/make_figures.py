@@ -147,44 +147,40 @@ def fig_cell_heatmap(data, model, severity_key, title, filename):
 
 
 def fig_breach_awareness_by_money():
-    """Combines all three: money at stake (x), breach rate and eval-awareness rate (two y-axes),
-    one panel per model. Recomputed from the raw logs via build_frame, since report_data.json only
-    has the awareness/breach split, not both cut by money level (see prereg's money-sweep finding:
-    this is what shows awareness is flat across money while breach is not)."""
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+    """Money at stake (shared x) against breach rate (top row) and eval-awareness rate (bottom row), one column
+    per model. Two rows, not two y-axes on one plot: each measure keeps its own honest scale. Recomputed from the
+    raw logs via build_frame, since report_data.json has no money cut of awareness (see prereg's money-sweep
+    finding: this is what shows awareness is flat across money while breach is not)."""
     frames = {m: build_frame(LOG_DIRS[m]) for m in MODELS}
     grouped = {m: frames[m].groupby("log10_money").agg(
         breach_rate=("breach", "mean"), awareness_rate=("eval_awareness", "mean")).sort_index()
         for m in MODELS}
     breach_max = max(g.breach_rate.max() for g in grouped.values()) * 100
-    for ax, m in zip(axes, MODELS):
+    fig, axes = plt.subplots(2, 2, figsize=(11, 6.4), sharex=True)
+    rows = [("breach_rate", "Breach rate (%)", "#c0392b", "o-", (0, breach_max * 1.15)),
+            ("awareness_rate", "Eval-awareness rate (%)", "#2b6cb0", "s-", (0, 100))]
+    for col, m in enumerate(MODELS):
         g = grouped[m]
         money = [10 ** x for x in g.index]
-
-        l1, = ax.plot(money, g.breach_rate * 100, "o-", color="#c0392b", label="Breach rate")
-        ax.set_xscale("log")
-        ax.set_xticks(money)
-        ax.set_xticklabels([f"£{v:,.0f}" for v in money], rotation=30, ha="right")
-        ax.set_ylabel("Breach rate (%)", color="#c0392b")
-        ax.tick_params(axis="y", labelcolor="#c0392b")
-        ax.set_ylim(0, breach_max * 1.1)
-        ax.set_title(LABELS[m])
-
-        ax2 = ax.twinx()
-        l2, = ax2.plot(money, g.awareness_rate * 100, "s--", color="#2b6cb0",
-                       label="Eval-awareness rate")
-        ax2.set_ylabel("Eval-awareness rate (%)", color="#2b6cb0")
-        ax2.tick_params(axis="y", labelcolor="#2b6cb0")
-        ax2.set_ylim(0, 100)
-
-        if m == MODELS[0]:
-            ax.legend([l1, l2], ["Breach rate", "Eval-awareness rate"], loc="upper left", fontsize=8)
-
-    fig.suptitle("Breach rate vs. eval-awareness rate, by money at stake")
+        for row, (field, ylabel, color, style, ylim) in enumerate(rows):
+            ax = axes[row][col]
+            ax.plot(money, g[field] * 100, style, color=color, linewidth=2, markersize=6)
+            ax.set_xscale("log")
+            ax.set_ylim(*ylim)
+            ax.grid(True, axis="y", color="#e4e3df", linewidth=0.8)
+            ax.set_axisbelow(True)
+            if col == 0:
+                ax.set_ylabel(ylabel)
+            if row == 0:
+                ax.set_title(LABELS[m])
+            if row == 1:
+                ax.set_xticks(money)
+                ax.set_xticklabels([f"£{v:,.0f}" for v in money], rotation=30, ha="right")
+                ax.minorticks_off()
+    fig.suptitle("Breach rate and eval-awareness rate by money at stake")
     fig.tight_layout()
     fig.savefig(OUT / "breach_awareness_by_money.png", dpi=150)
     plt.close(fig)
-
 
 if __name__ == "__main__":
     data_by_model = {m: load(m) for m in MODELS}
