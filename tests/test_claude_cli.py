@@ -36,6 +36,12 @@ def test_argv_strips_builtin_tools_settings_and_claude_code_prompt():
     assert argv[argv.index("--permission-mode") + 1] == "default"
 
 
+def test_argv_requests_summarized_thinking():
+    """Haiku 5.5 on CLI 2.1.296 returns empty thinking blocks unless the display is requested explicitly."""
+    argv = claude_cli.build_argv("hi", system_prompt="s", cli_model="claude-haiku-5-5", mcp_config="m", allowed_tools=())
+    assert argv[argv.index("--thinking-display") + 1] == "summarized"
+
+
 def test_argv_resumes_session_for_later_turns():
     argv = claude_cli.build_argv("turn 2", system_prompt="s", cli_model="haiku", mcp_config="m",
                                  allowed_tools=("submit_bid",), resume="abc-123")

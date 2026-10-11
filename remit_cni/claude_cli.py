@@ -26,7 +26,8 @@ from typing import Iterable
 from remit_cni.models import ModelError, _fmt, _run_tool
 from remit_cni.sandbox.harness import HaltRun, ToolBox
 
-CLI_MODELS = {"claude-haiku-4-5-20251001": "haiku"}
+# Full IDs, not the "haiku" alias, whose target changes between CLI versions.
+CLI_MODELS = {"claude-haiku-4-5-20251001": "claude-haiku-4-5-20251001", "claude-haiku-5-5": "claude-haiku-5-5"}
 MCP_PREFIX = "mcp__sandbox__"
 MAX_STEPS_PER_TURN = 12
 TURN_TIMEOUT_S = 900
@@ -50,7 +51,7 @@ def build_argv(prompt: str, *, system_prompt: str, cli_model: str, mcp_config: s
             "--output-format", "stream-json", "--verbose",
             "--tools", "", "--setting-sources", "", "--strict-mcp-config", "--mcp-config", mcp_config,
             "--system-prompt", system_prompt,
-            "--settings", json.dumps({"showThinkingSummaries": True}),
+            "--settings", json.dumps({"showThinkingSummaries": True}), "--thinking-display", "summarized",
             "--allowedTools", ",".join(MCP_PREFIX + t for t in allowed_tools),
             "--permission-mode", "default", "--max-turns", str(MAX_STEPS_PER_TURN)]
     if resume:

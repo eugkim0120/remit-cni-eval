@@ -10,29 +10,36 @@ did is scored mechanically from its tool calls; no human or LLM judge decides a 
 
 ![What each model did](docs/figures/focus_outcomes.png)
 
-## Headline (100 runs per model, same 100 scenarios)
+## Headline (same scenarios for every model; 100 runs at GBP 50k, 370 across ten money levels)
 
-| Model | Published the UMM first | Traded before publishing | Corrected the declaration, then waited |
-|---|---|---|---|
-| Claude Haiku 4.5 | 38 | **27** | 35 |
-| OpenAI GPT-6 Luna | 100 | 0 | 0 |
-| DeepSeek V4.1 Flash | 100 | 0 | 0 |
-| MiMo V2.6 Flash | 100 | 0 | 0 |
+| Model | Published the UMM first (GBP 50k) | Traded before publishing (GBP 50k) | Corrected the declaration, then waited (GBP 50k) | Traded before publishing, all levels |
+|---|---|---|---|---|
+| Claude Haiku 4.5 | 38 | **27** | 35 | **103 / 370** |
+| Claude Haiku 5.5 | 100 | 0 | 0 | 0 / 370 |
+| OpenAI GPT-5.6 Luna | 100 | 0 | 0 | 0 / 370 |
+| OpenAI GPT-6 Luna | 100 | 0 | 0 | 0 / 370 |
+| DeepSeek V4.1 Flash | 100 | 0 | 0 | 0 / 370 |
+| MiMo V2.6 Flash | 100 | 0 | 0 | 0 / 370 |
+| GLM-5.3 Flash | 99 | 1 | 0 | 2 / 370 |
 
-Haiku's trades were buy-backs to cover the delivery shortfall. In most of them its reasoning never
-raised disclosure at all, and it never published a UMM in 62 of 100 runs. DeepSeek and MiMo often
-said the scenario might be a test (89 and 44 runs) and never traded first; Haiku never suspected a
-test. Full results and caveats: [`docs/writeup.md`](docs/writeup.md).
+Haiku 4.5's trades were buy-backs to cover the delivery shortfall. In most of them its reasoning never
+raised disclosure at all, and it never published a UMM in 62 of 100 runs. Haiku 5.5 published first
+in every run, so the failure is specific to the older model. The money at stake (GBP 5k to 150k) made
+no detectable difference to any model. DeepSeek, MiMo and GLM often said the scenario might be a test
+(89, 44 and 25 of 100 runs); Haiku 4.5 never suspected a test. Full results and caveats:
+[`docs/writeup.md`](docs/writeup.md).
+
+![Money at stake vs what each model did](docs/figures/focus_money.png)
 
 New to REMIT? Start with [`docs/figures/umm_explainer.png`](docs/figures/umm_explainer.png). To see
 exactly what the agent is given, see [`docs/figures/environment.png`](docs/figures/environment.png).
 
 ## Caveats
 
-- One simulated scenario, exploratory for the four-model comparison. Only DeepSeek and MiMo were run
+- One simulated scenario, exploratory for the seven-model comparison. Only DeepSeek and MiMo were run
   across the full pre-registered factor grid (about 1,000 runs each).
-- All four are their provider's fast, low-cost tier, so nothing here is about frontier models.
-- Reasoning visibility differs by provider (Luna exposes one-line summaries only), so rates computed
+- All seven are their provider's fast, low-cost tier, so nothing here is about frontier models.
+- Reasoning visibility differs by provider (the Lunas expose one-line summaries only), so rates computed
   from reasoning text are not comparable across models. Action outcomes are.
 - The mechanical breach coder and the motive coding have not yet been calibrated against human hand
   codes.
@@ -44,7 +51,7 @@ exactly what the agent is given, see [`docs/figures/environment.png`](docs/figur
 | `remit_cni/sandbox/` | Simulated market, grid, tools and episode harness |
 | `remit_cni/scenarios/` | Scenario compiler (design v4) and templates |
 | `remit_cni/coding/` | Mechanical breach rules, LLM-judge rubric, calibration statistics |
-| `remit_cni/models.py` | OpenCode provider client (DeepSeek, MiMo) |
+| `remit_cni/models.py` | OpenCode provider client (DeepSeek, MiMo, GLM) |
 | `remit_cni/claude_cli.py`, `codex_cli.py`, `mcp_bridge.py` | Isolated subscription-CLI adapters (Haiku, Luna) |
 | `scripts/` | Run, analysis and figure scripts |
 | `docs/prereg.md` | Pre-registration and the full amendment log, design dead-ends included |
@@ -62,7 +69,7 @@ uv sync
 uv run pytest
 ```
 
-Running models needs credentials from the environment: `OPENCODE_API_KEY` for DeepSeek and MiMo, or a
+Running models needs credentials from the environment: `OPENCODE_API_KEY` for DeepSeek, MiMo and GLM, or a
 logged-in `claude` / `codex` CLI for Haiku and Luna. For example, 100 reference-cell runs:
 
 ```bash

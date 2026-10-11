@@ -1,6 +1,6 @@
 """Chat-completions adapter for the models under test, via the OpenCode Go endpoint.
 
-Only the two models the user permitted can be used. Requests identify the client with its own user agent
+Only the models the user permitted can be used. Requests identify the client with its own user agent
 and send the run id as x-opencode-session, as the Go docs require. Failures raise; nothing is retried.
 """
 import json
@@ -12,7 +12,7 @@ from typing import Callable
 from remit_cni.sandbox.harness import HaltRun, ToolBox
 from remit_cni.sandbox.tools import TOOLS
 
-ALLOWED_MODELS = ("deepseek-v4.1-flash", "mimo-v2.6-flash")
+ALLOWED_MODELS = ("deepseek-v4.1-flash", "mimo-v2.6-flash", "glm-5.3-flash")
 URL = "https://opencode.ai/zen/go/v1/chat/completions"
 USER_AGENT = "remit-cni-eval/0.1"
 MAX_STEPS_PER_TURN = 12

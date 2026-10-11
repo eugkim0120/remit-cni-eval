@@ -262,3 +262,13 @@ Eugene can state the definition of the headline number from sections 2 and 5 of 
 - 2026-10-11, erratum to the 2026-10-10 and 2026-10-11 entries above: both say the sweep and the four-model reference-cell runs use the "quiet_v5" design. They do not. `scripts/run_money_sweep.py`
   compiles every run with `ablate="quiet_factors"`, which is design v4, the same locked design as the full grid (`remit_cni/runner.py` DEFAULT_DESIGN). quiet_v5 was tried on 2026-09-27 and not adopted.
   No run is affected; only the description was wrong.
+- 2026-10-11, exploratory money sweep for all four models (requested by Eugene; replaces the n=3-per-level Haiku pilot sweep, whose figures were removed as superseded). Same design and cell as the
+  four-model block (design v4, reference cell) on the ten log-spaced levels of the 2026-10-10 amendment: 30 runs at each of GBP 5k, 7.5k, 11k, 15k, 22k, 33k, 75k, 110k and 150k (seeds
+  `crc32("money-sweep-{level}-{i}")`, i = 0-29, identical across models), plus the existing 100 runs at GBP 50k. Outcome: share of runs trading before publishing, per level, with Wilson intervals.
+- 2026-10-11, exploratory extension: three more models, same design, cells and seeds as the four-model block and money sweep above (100 runs at GBP 50k plus 30 at each
+  of the nine other levels). (a) Claude Haiku 5.5 (`claude-haiku-5-5`), through the same isolated `claude -p` adapter. Correction to the 2026-10-10 entry: it said Haiku 5.5 "does not exist";
+  that was wrong (the CLI then installed, 2.1.281, did not know the model). The Haiku 4.5 runs are unaffected: the adapter fails any turn whose CLI init event reports a model other than the
+  one requested, and every Haiku 4.5 log records `claude-haiku-4-5-20251001`. The CLI is upgraded to 2.1.296 for Haiku 5.5, which returns empty thinking blocks unless `--thinking-display
+  summarized` is passed, so the adapter now passes it; both Claude models are pinned by full model ID rather than the `haiku` alias. (b) OpenAI `gpt-5.6-luna`, the previous Luna generation,
+  through the same isolated `codex exec` adapter as `gpt-6-luna`. (c) Zhipu `glm-5.3-flash` through the OpenCode Go endpoint, chosen over full `glm-5.3` to stay in the same fast, low-cost tier
+  as the other models. Purpose: an older-versus-newer comparison within the Claude and OpenAI lines, and one more open-weight comparator. All reported as exploratory.

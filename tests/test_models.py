@@ -42,8 +42,8 @@ def test_every_tool_has_a_schema():
     assert set(TOOL_SCHEMAS) == set(TOOLS)
 
 
-def test_only_the_two_permitted_models_are_allowed():
-    assert set(ALLOWED_MODELS) == {"deepseek-v4.1-flash", "mimo-v2.6-flash"}
+def test_only_the_permitted_models_are_allowed():
+    assert set(ALLOWED_MODELS) == {"deepseek-v4.1-flash", "mimo-v2.6-flash", "glm-5.3-flash"}
     for bad in ("claude-sonnet-5", "gpt-5", "codex", "deepseek-v4-flash"):
         with pytest.raises(ModelError):
             make_agent(bad, transport=Scripted([]))

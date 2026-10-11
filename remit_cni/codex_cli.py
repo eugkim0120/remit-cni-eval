@@ -31,7 +31,7 @@ from remit_cni.claude_cli import MAX_STEPS_PER_TURN, REPO_ROOT, TURN_TIMEOUT_S, 
 from remit_cni.models import ModelError, _fmt
 from remit_cni.sandbox.harness import ToolBox
 
-CLI_MODELS = ("gpt-6-luna",)
+CLI_MODELS = ("gpt-6-luna", "gpt-5.6-luna")
 DISABLED_FEATURES = ("shell_tool", "unified_exec", "browser_use", "computer_use", "image_generation", "apps",
                      "plugins", "multi_agent", "hooks", "goals", "tool_suggest", "in_app_browser",
                      "code_mode_host", "remote_plugin", "view_image", "sleep_tool")
