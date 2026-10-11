@@ -1,5 +1,5 @@
 """Diagnostic: does eval-awareness rise with the money level? Runs archetype 8 at each MONEY_LEVELS
-value, reference cell otherwise, quiet_v5 design.
+value, reference cell otherwise, design v4 (ablate="quiet_factors", the locked design the full grid used).
 Usage: run_money_sweep.py MODEL LOG_DIR N_PER_LEVEL [LEVELS] [FIRST]
 LEVELS is a comma-separated GBP list (default: the grid's MONEY_LEVELS). FIRST (default 0) starts at run index
 FIRST, so disjoint index ranges can run as parallel shards over the same seeds. Claude and Codex models run via their CLI adapters."""

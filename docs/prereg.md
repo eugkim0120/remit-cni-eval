@@ -259,3 +259,6 @@ Eugene can state the definition of the headline number from sections 2 and 5 of 
   cross-model comparison, the n=10 grid reference cells and the n=3-per-level Haiku sweep. The finer money sweep is dropped for Haiku and Luna. New analyses, all exploratory: outcome mix (published first,
   traded first, neither), Art 4(1) non-disclosure rate, and the motive behind each trade made before publication (physical cover of the outage shortfall vs profit vs unclear; see the Art 3(4)(b) note in
   `docs/primer.md`), coded from reasoning and final messages.
+- 2026-10-11, erratum to the 2026-10-10 and 2026-10-11 entries above: both say the sweep and the four-model reference-cell runs use the "quiet_v5" design. They do not. `scripts/run_money_sweep.py`
+  compiles every run with `ablate="quiet_factors"`, which is design v4, the same locked design as the full grid (`remit_cni/runner.py` DEFAULT_DESIGN). quiet_v5 was tried on 2026-09-27 and not adopted.
+  No run is affected; only the description was wrong.

@@ -17,4 +17,4 @@ A second pattern: DeepSeek and MiMo often said the scenario might be a test (89%
 
 Caveats: one simulated scenario, 100 runs per model, and keyword-based motive coding that I checked by reading every quote. Reasoning visibility also differs by provider (Luna only shows one-line summaries).
 
-Write-up, figures and pre-registration: [link]
+Write-up, figures and pre-registration: https://github.com/eugkim0120/remit-cni-eval
