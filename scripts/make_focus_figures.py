@@ -446,34 +446,31 @@ def never_published(log: dict) -> bool:
 
 
 def fig_money(sweep: dict) -> None:
-    """sweep[model][level] = clean logs at that level (30 per level, 100 at GBP 50k). One panel per model, since six of
-    the seven sit at or near zero and would hide each other on a shared axis; every panel uses the same 0-100% scale."""
-    series = [(lambda l: outcome(l) == TRADED_FIRST, "Traded before publishing", RED, "o-"),
-              (never_published, "Never published the UMM", INK2, "s--")]
+    """sweep[model][level] = clean logs at that level (30 per level, 100 at GBP 50k). One panel per model, grouped bars
+    per money level, so a level with no non-compliant runs reads as an explicit 0 rather than a point on the axis."""
+    series = [(lambda l: outcome(l) == TRADED_FIRST, "Traded before publishing", RED),
+              (never_published, "Never published the UMM", INK2)]
+    width = 0.4
     fig, axes = plt.subplots(2, 4, figsize=(15, 7.4), sharex=True, sharey=True)
     for ax, (name, by_level) in zip(axes.flat, sweep.items()):
-        for j, (metric, label, color, fmt) in enumerate(series):
-            levels = [m for m in MONEY_LEVELS if by_level.get(m)]
-            ks = [sum(map(metric, by_level[m])) for m in levels]
-            ns = [len(by_level[m]) for m in levels]
-            rates = [k / n * 100 for k, n in zip(ks, ns)]
-            cis = [_ci(k, n) for k, n in zip(ks, ns)]
-            x = [m * (1 + 0.04 * (j - 0.5)) for m in levels]  # nudge the two series apart so intervals don't overlap
-            ax.errorbar(x, rates, yerr=[[r - lo for r, (lo, _) in zip(rates, cis)],
-                                        [hi - r for r, (_, hi) in zip(rates, cis)]],
-                        fmt=fmt, color=color, ecolor=color, elinewidth=1, capsize=2, markersize=4, linewidth=1.6,
-                        label=label)
+        levels = [m for m in MONEY_LEVELS if by_level.get(m)]
+        for j, (metric, label, color) in enumerate(series):
+            x = [i + (j - 0.5) * width for i in range(len(levels))]
+            rates = [sum(map(metric, by_level[m])) / len(by_level[m]) * 100 for m in levels]
+            ax.bar(x, rates, width=width, color=color, label=label)
+            for xi, rate in zip(x, rates):
+                if rate < 5:  # label zeros and slivers too small to see
+                    ax.text(xi, rate + 1.5, f"{rate:.0f}", ha="center", va="bottom", fontsize=7, color=color)
         total = sum(len(v) for v in by_level.values())
         traded = sum(outcome(l) == TRADED_FIRST for v in by_level.values() for l in v)
         ax.set_title(f"{name}\n{traded} of {total} runs traded first", loc="left", fontsize=10,
                      color=INK if name in LEAD else INK2, fontweight="bold" if name in LEAD else "normal")
-        ax.set_xscale("log")
-        ax.set_xticks(MONEY_LEVELS, [f"£{m / 1000:g}k" for m in MONEY_LEVELS], fontsize=7.5, rotation=45)
-        ax.minorticks_off()
-        ax.set_ylim(-4, 104)
+        ax.set_xticks(range(len(MONEY_LEVELS)), [f"£{m / 1000:g}k" for m in MONEY_LEVELS], fontsize=7.5, rotation=45)
+        ax.set_ylim(0, 100)
         ax.set_yticks([0, 25, 50, 75, 100], ["0%", "25%", "50%", "75%", "100%"])
         ax.yaxis.grid(True, color=GRID, linewidth=0.8)
         ax.set_axisbelow(True)
+        ax.tick_params(axis="x", length=0)
     legend_ax = axes.flat[-1]
     legend_ax.axis("off")
     handles, labels = axes.flat[0].get_legend_handles_labels()
@@ -485,8 +482,8 @@ def fig_money(sweep: dict) -> None:
     axes[0, 3].xaxis.set_tick_params(labelbottom=True)
     n_other = {len(v[m]) for v in sweep.values() for m in MONEY_LEVELS if m != 50_000 and v.get(m)}
     top = _title(fig, "Non-Compliance Rate vs Money at Stake",
-                 f"Same scenario at ten money levels (value of trading before the news is public); "
-                 f"{'/'.join(map(str, sorted(n_other)))} runs per level, 100 at £50k; 95% Wilson intervals")
+                 f"Same scenario at ten money levels; {'/'.join(map(str, sorted(n_other)))} runs per level, 100 at £50k. "
+                 "A 0 means none of that level's runs; with 30 runs that still allows a true rate of up to about 11%.")
     fig.tight_layout(rect=(0, 0, 1, top))
     _save(fig, "focus_money.png")
 
