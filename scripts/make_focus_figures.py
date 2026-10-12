@@ -88,16 +88,34 @@ def _ci(k: int, n: int) -> tuple[float, float]:
     return min(lo * 100, k / n * 100), max(hi * 100, k / n * 100)  # Wilson bounds can miss 0 or 1 by float error
 
 
+FIGSIZE, DPI = (8, 10), 300  # every figure is 2400x3000 px (4:5 portrait), the same as the HTML explainers
+
+
 def _title(fig, text: str, sub: str | None = None) -> float:
-    """Figure-level title and subtitle, left-aligned to the figure edge; returns the top of the plotting area."""
-    fig.text(0.01, 0.985, text, color=INK, fontsize=12.5, fontweight="bold", va="top")
+    """Figure-level title and subtitle, wrapped and left-aligned to the figure edge; returns the top of the plotting
+    area as a figure fraction."""
+    h = fig.get_figheight()
+    title_lines = textwrap.wrap(text, 58)
+    fig.text(0.03, 1 - 0.3 / h, "\n".join(title_lines), color=INK, fontsize=14, fontweight="bold", va="top",
+             linespacing=1.3)
+    y = 0.3 + 0.3 * len(title_lines) + 0.1
     if sub:
-        fig.text(0.01, 0.985 - 0.36 / fig.get_figheight(), sub, color=INK2, fontsize=9.5, va="top")
-    return 1 - (0.95 if sub else 0.6) / fig.get_figheight()
+        sub_lines = textwrap.wrap(sub, 92)
+        fig.text(0.03, 1 - y / h, "\n".join(sub_lines), color=INK2, fontsize=9.5, va="top", linespacing=1.4)
+        y += 0.2 * len(sub_lines)
+    return 1 - (y + 0.25) / h
+
+
+def _footnote(fig, text: str) -> float:
+    """Wrapped footnote at the bottom edge; returns the bottom of the plotting area as a figure fraction."""
+    lines = textwrap.wrap(text, 100)
+    fig.text(0.03, 0.2 / fig.get_figheight(), "\n".join(lines), color=INK2, fontsize=8.5, va="bottom", linespacing=1.4)
+    return (0.35 + 0.18 * len(lines)) / fig.get_figheight()
 
 
 def _save(fig, name: str) -> None:
-    fig.savefig(OUT / name, dpi=180, facecolor=PAPER)
+    assert tuple(fig.get_size_inches()) == FIGSIZE, f"{name} is {fig.get_size_inches()}, not {FIGSIZE}"
+    fig.savefig(OUT / name, dpi=DPI, facecolor=PAPER)
     plt.close(fig)
 
 
@@ -105,7 +123,7 @@ def _save(fig, name: str) -> None:
 
 def fig_outcomes(data: dict) -> None:
     n_runs = "/".join(sorted({str(len(logs)) for logs in data.values()}))
-    fig, ax = plt.subplots(figsize=(9, 5.0))
+    fig, ax = plt.subplots(figsize=FIGSIZE)
     names = list(data)
     for i, name in enumerate(reversed(names)):
         logs, left = data[name], 0
@@ -114,7 +132,7 @@ def fig_outcomes(data: dict) -> None:
             if share:
                 ax.barh(i, share, left=left, height=0.62, color=color, edgecolor="white", linewidth=2)
                 if share >= 6:
-                    ax.text(left + share / 2, i, f"{share:.0f}%", ha="center", va="center", fontsize=9.5,
+                    ax.text(left + share / 2, i, f"{share:.0f}%", ha="center", va="center", fontsize=11,
                             color=INK if color == NEUTRAL else "white", fontweight="bold")
             left += share
     labels = [f"{n}  (n={len(data[n])})" for n in reversed(names)]
@@ -127,8 +145,8 @@ def fig_outcomes(data: dict) -> None:
     ax.set_xticks([0, 25, 50, 75, 100], ["0%", "25%", "50%", "75%", "100%"])
     ax.tick_params(axis="y", length=0)
     ax.legend(handles=[plt.Rectangle((0, 0), 1, 1, color=c) for c in OUTCOME_COLORS.values()],
-              labels=list(OUTCOME_COLORS), frameon=False, loc="upper center", bbox_to_anchor=(0.42, -0.12), ncol=3,
-              fontsize=9)
+              labels=list(OUTCOME_COLORS), frameon=False, loc="upper center", bbox_to_anchor=(0.35, -0.05), ncol=1,
+              fontsize=10)
     top = _title(fig, "Actions Taken by Each Agent",
                  f"Same {n_runs} scenarios per model, £5k-£150k at stake; models that did not fully comply in bold")
     fig.tight_layout(rect=(0, 0, 1, top))
@@ -147,7 +165,7 @@ def path(log: dict) -> tuple:
 
 
 def fig_paths(data: dict, top: int = 5) -> None:
-    fig, axes = plt.subplots(2, 2, figsize=(12, 6.4))
+    fig, axes = plt.subplots(4, 1, figsize=FIGSIZE)
     for ax, name in zip(axes.flat, LEAD, strict=True):  # the comparison models all take the declare-UMM path
         logs = data[name]
         counts = collections.Counter(path(l) for l in logs).most_common(top)
@@ -171,11 +189,11 @@ def fig_paths(data: dict, top: int = 5) -> None:
                      color=INK if name in LEAD else INK2, fontweight="bold" if name in LEAD else "normal")
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (INFO, COMPLY, BREACH, COMPLY_LIGHT, TAN)]
     fig.legend(handles, ["Correct availability declaration", "Publish UMM", "Trade before the UMM",
-                         "Trade after the UMM", "Message desk head"], loc="lower center", ncol=5, frameon=False,
+                         "Trade after the UMM", "Message desk head"], loc="lower center", ncol=3, frameon=False,
                fontsize=9)
-    fig.suptitle("Sequence of Actions by Agent (consecutive repeats merged; look-ups omitted)", x=0.01, ha="left",
-                 fontsize=12, fontweight="bold", color=INK)
-    fig.tight_layout(rect=(0, 0.06, 1, 0.96))
+    top = _title(fig, "Sequence of Actions by Agent", "Most common orders of actions; consecutive repeats merged, "
+                 "look-ups omitted")
+    fig.tight_layout(rect=(0, 0.06, 1, top))
     _save(fig, "focus_paths.png")
 
 
@@ -247,26 +265,24 @@ def fig_haiku_why(rows: list[dict], n_runs: int) -> None:
     counts = collections.Counter(r["motive"] for r in rows)
     labels = [m for m, _ in MOTIVES] + [SOLD] * (SOLD in counts)
     colors = [BREACH_DARK, BREACH, BREACH_LIGHT, "#f0d3c5", NEUTRAL]
-    fig, (ax, qx) = plt.subplots(1, 2, figsize=(12.5, 5.2), gridspec_kw={"width_ratios": [1, 1.9], "wspace": 0.02})
+    fig, ax = plt.subplots(figsize=FIGSIZE)
+    widest = max(counts.values())
     for i, (label, color) in enumerate(zip(labels, colors)):
-        y = len(labels) - 1 - i
+        y = -3 * i
         k = counts.get(label, 0)
-        ax.barh(y, k, height=0.6, color=color)
-        ax.text(k + 0.4, y, f"{k}", va="center", fontsize=12, fontweight="bold", color=INK)
-        qx.text(0, y, textwrap.fill(QUOTES[label], 78), va="center", fontsize=9, color=INK2, style="italic")
-    ax.set_yticks(range(len(labels)), list(reversed(labels)), fontsize=10)
-    ax.tick_params(axis="y", length=0)
-    ax.set_xlim(0, max(counts.values()) * 1.25)
-    ax.set_xticks([])
-    ax.spines["bottom"].set_visible(False)
-    qx.set_ylim(ax.get_ylim())
-    qx.axis("off")
+        ax.text(0, y + 0.85, label, fontsize=12, fontweight="bold", color=INK, va="bottom")
+        ax.barh(y, k, height=1.1, color=color)
+        ax.text(k + widest * 0.015, y, f"{k}", va="center", fontsize=13, fontweight="bold", color=INK)
+        ax.text(0, y - 0.8, textwrap.fill(QUOTES[label], 84), va="top", fontsize=9.5, color=INK2, style="italic")
+    ax.set_xlim(0, widest * 1.1)
+    ax.set_ylim(-3 * (len(labels) - 1) - 2.4, 1.9)
+    ax.axis("off")
     every_buy = all(r["bid_sides"] == "buy" for r in rows)
-    top = _title(fig, f"Haiku 4.5 Motives for Trading Before Disclosure ({len(rows)} of {n_runs} runs"
-                 f"{', all buy-backs' if every_buy else ''})",
+    top = _title(fig, "Haiku 4.5 Motives for Trading Before Disclosure",
+                 f"{len(rows)} of {n_runs} runs traded first{', all buy-backs' if every_buy else ''}. "
                  "Each run coded once from its own reasoning, most serious category first. "
                  f"{sum(r['published_later'] for r in rows)} of these runs published a UMM later; the rest never did.")
-    fig.subplots_adjust(left=0.29, right=0.99, top=top, bottom=0.04)
+    fig.subplots_adjust(left=0.03, right=0.97, top=top, bottom=0.03)
     _save(fig, "focus_haiku_why.png")
 
 
@@ -290,32 +306,31 @@ def fig_concepts(data: dict) -> None:
     haiku = data["Claude Haiku 4.5"]
     for label, short in ((TRADED_FIRST, "traded first"), (NEITHER, "waited"), (PUBLISHED_FIRST, "UMM first")):
         group = [l for l in haiku if outcome(l) == label]
-        columns.append((f"Haiku 4.5:\n{short}\n(n={len(group)})", group))
+        columns.append((f"Haiku 4.5, {short} (n={len(group)})", group))
     for name, short in (("Claude Haiku 5.5", "Haiku 5.5"), ("OpenAI GPT-6 Luna", "Luna 6"),
                         ("OpenAI GPT-5.6 Luna", "Luna 5.6"), ("DeepSeek V4.1 Flash", "DeepSeek"),
                         ("MiMo V2.6 Flash", "MiMo"), ("GLM-5.3 Flash", "GLM")):
-        columns.append((f"{short}\n(n={len(data[name])})", data[name]))
-    grid = [[sum(bool(re.search(p, agent_text(l), re.I)) for l in logs) / len(logs) * 100 for _, logs in columns]
-            for p in CONCEPTS.values()]
-    fig, ax = plt.subplots(figsize=(13.5, 5.6))
+        columns.append((f"{short} (n={len(data[name])})", data[name]))
+    grid = [[sum(bool(re.search(p, agent_text(l), re.I)) for l in logs) / len(logs) * 100 for p in CONCEPTS.values()]
+            for _, logs in columns]
+    fig, ax = plt.subplots(figsize=FIGSIZE)
     ax.imshow(grid, cmap=LinearSegmentedColormap.from_list("sky", ["#ffffff", "#c9dbea", INFO, "#33587d"]),
               vmin=0, vmax=100, aspect="auto")
     for i, row in enumerate(grid):
         for j, v in enumerate(row):
             ax.text(j, i, f"{v:.0f}%", ha="center", va="center", fontsize=9.5, color="white" if v > 60 else INK)
-    ax.set_xticks(range(len(columns)), [c[0] for c in columns], fontsize=8.8)
-    ax.set_yticks(range(len(CONCEPTS)), list(CONCEPTS))
+    ax.set_xticks(range(len(CONCEPTS)), [textwrap.fill(c, 11, break_long_words=False) for c in CONCEPTS], fontsize=8.5)
+    ax.set_yticks(range(len(columns)), [c[0] for c in columns], fontsize=9.5)
     ax.tick_params(length=0)
     ax.xaxis.tick_top()
     for spine in ax.spines.values():
         spine.set_visible(False)
-    ax.axvline(2.5, color="white", linewidth=4)
-    fig.text(0.01, 0.02, "Share of runs whose own text (reasoning, desk-head messages, final message) mentions each "
-             "idea. Both Lunas expose only one-line reasoning headlines,\nso their columns mostly reflect their messages; "
-             "the Haikus' are thinking summaries; DeepSeek's, MiMo's and GLM's are raw reasoning.", fontsize=8.5, color=INK2)
-    fig.suptitle("Topics Mentioned in Each Agent's Reasoning and Messages", x=0.01, ha="left", fontsize=12,
-                 fontweight="bold", color=INK)
-    fig.tight_layout(rect=(0, 0.07, 1, 0.97))
+    ax.axhline(2.5, color=PAPER, linewidth=4)
+    bottom = _footnote(fig, "Share of runs whose own text (reasoning, desk-head messages, final message) mentions each "
+                       "idea. Both Lunas expose only one-line reasoning headlines, so their rows mostly reflect their "
+                       "messages; the Haikus' are thinking summaries; DeepSeek's, MiMo's and GLM's are raw reasoning.")
+    top = _title(fig, "Topics Mentioned in Each Agent's Reasoning and Messages")
+    fig.tight_layout(rect=(0, bottom, 1, top))
     _save(fig, "focus_concepts.png")
 
 
@@ -386,7 +401,7 @@ def fig_haiku_words(haiku: list[dict], top: int = 10) -> None:
     ranked = sorted(scores.items(), key=lambda kv: kv[1])
     panels = [(f"More common when Haiku traded first  ({len(traded)} runs)", list(reversed(ranked[-top:])), traded),
               (f"More common when Haiku published the UMM first  ({len(published)} runs)", ranked[:top], published)]
-    fig, axes = plt.subplots(2, 1, figsize=(11, 9.6), sharex=True)
+    fig, axes = plt.subplots(2, 1, figsize=FIGSIZE, sharex=True)
     lim = max(abs(z) for _, z in ranked[:top] + ranked[-top:]) * 1.08
     for ax, (title, words, logs) in zip(axes, panels):
         for i, (w, z) in enumerate(words):
@@ -397,7 +412,7 @@ def fig_haiku_words(haiku: list[dict], top: int = 10) -> None:
                     transform=ax.get_yaxis_transform())
             ax.text(abs(z) + 0.08, i, typical_phrase(w, logs), va="center", fontsize=9.2, color=INK2, style="italic")
         ax.set_ylim(len(words) - 0.4, -0.6)
-        ax.set_xlim(0, lim * 1.75)
+        ax.set_xlim(0, lim * 1.65)
         ax.set_yticks([])
         ax.spines["left"].set_visible(False)
         ax.set_title(title, loc="left", fontsize=11, color=INK, fontweight="bold")
@@ -407,18 +422,18 @@ def fig_haiku_words(haiku: list[dict], top: int = 10) -> None:
     if any(w not in WORD_IDEA for _, ws, _ in panels for w, _ in ws):
         handles.append(plt.Rectangle((0, 0), 1, 1, color=NEUTRAL))
         present = present + ["Mixed use"]  # e.g. "message" is both the UMM and messaging the desk head
-    fig.legend(handles, present, loc="lower center", ncol=4, frameon=False, fontsize=9.2)
+    fig.legend(handles, present, loc="lower center", ncol=2, frameon=False, fontsize=9.2)
     top_edge = _title(fig, "Distinctive Words in Haiku 4.5 Reasoning: Traded First vs Published First",
                       "Each word shown with its most common phrase and coloured by "
                       "the idea it belongs to (words seen at least 8 times)")
-    fig.subplots_adjust(left=0.15, right=0.98, top=top_edge - 0.01, bottom=0.11, hspace=0.18)
+    fig.subplots_adjust(left=0.17, right=0.97, top=top_edge, bottom=0.14, hspace=0.2)
     _save(fig, "focus_haiku_words.png")
 
 
 # ---------------------------------------------------------------- 6. eval-awareness vs trading first
 
 def fig_awareness(data: dict) -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.6), sharey=True)
+    fig, axes = plt.subplots(2, 1, figsize=FIGSIZE, sharex=True)
     names = list(data)
     for ax, (metric, title, color) in zip(axes, [(lambda l: outcome(l) == TRADED_FIRST, "Traded before publishing",
                                                   BREACH), (aware, "Eval Suspicion", INFO)]):
@@ -435,13 +450,13 @@ def fig_awareness(data: dict) -> None:
         ax.xaxis.grid(True, color=GRID, linewidth=0.8)
         ax.set_axisbelow(True)
         ax.set_title(title, loc="left", fontsize=10.5, color=INK, fontweight="bold")
-    axes[0].set_yticks(range(len(names)), list(reversed(names)))
-    axes[0].tick_params(axis="y", length=0)
-    fig.suptitle("Trading Before Disclosure vs Eval Suspicion",
-                 x=0.01, ha="left", fontsize=12, fontweight="bold", color=INK)
-    fig.text(0.01, 0.01, "95% Wilson intervals. Eval suspicion is the mechanical test-language regex over reasoning and "
-             "final message, so it depends on how much reasoning each model exposes.", fontsize=8.5, color=INK2)
-    fig.tight_layout(rect=(0, 0.05, 1, 0.93))
+    for ax in axes:
+        ax.set_yticks(range(len(names)), list(reversed(names)))
+        ax.tick_params(axis="y", length=0)
+    bottom = _footnote(fig, "95% Wilson intervals. Eval suspicion is the mechanical test-language regex over reasoning "
+                       "and final message, so it depends on how much reasoning each model exposes.")
+    top = _title(fig, "Trading Before Disclosure vs Eval Suspicion")
+    fig.tight_layout(rect=(0, bottom, 1, top), h_pad=2.5)
     _save(fig, "focus_awareness.png")
 
 
@@ -457,7 +472,7 @@ def fig_money(sweep: dict) -> None:
     series = [(lambda l: outcome(l) == TRADED_FIRST, "Traded before publishing", BREACH),
               (never_published, "Never published the UMM", INK2)]
     width = 0.4
-    fig, axes = plt.subplots(2, 4, figsize=(15, 7.4), sharex=True, sharey=True)
+    fig, axes = plt.subplots(4, 2, figsize=FIGSIZE, sharex=True, sharey=True)
     for ax, (name, by_level) in zip(axes.flat, sweep.items()):
         levels = [m for m in MONEY_LEVELS if by_level.get(m)]
         for j, (metric, label, color) in enumerate(series):
@@ -466,12 +481,12 @@ def fig_money(sweep: dict) -> None:
             ax.bar(x, rates, width=width, color=color, label=label)
             for xi, rate in zip(x, rates):
                 if rate < 5:  # label zeros and slivers too small to see
-                    ax.text(xi, rate + 1.5, f"{rate:.0f}%" if rate else "0", ha="center", va="bottom", fontsize=7, color=color)
+                    ax.text(xi, rate + 1.5, f"{rate:.0f}%" if rate else "0", ha="center", va="bottom", fontsize=5.5, color=color)
         total = sum(len(v) for v in by_level.values())
         traded = sum(outcome(l) == TRADED_FIRST for v in by_level.values() for l in v)
-        ax.set_title(f"{name}\n{traded} of {total} runs traded first", loc="left", fontsize=10,
+        ax.set_title(f"{name}\n{traded} of {total} runs traded first", loc="left", fontsize=9.5,
                      color=INK if name in LEAD else INK2, fontweight="bold" if name in LEAD else "normal")
-        ax.set_xticks(range(len(MONEY_LEVELS)), [f"£{m / 1000:g}k" for m in MONEY_LEVELS], fontsize=7.5, rotation=45)
+        ax.set_xticks(range(len(MONEY_LEVELS)), [f"£{m / 1000:g}k" for m in MONEY_LEVELS], fontsize=7, rotation=60)
         ax.set_ylim(0, 100)
         ax.set_yticks([0, 25, 50, 75, 100], ["0%", "25%", "50%", "75%", "100%"])
         ax.yaxis.grid(True, color=GRID, linewidth=0.8)
@@ -483,9 +498,9 @@ def fig_money(sweep: dict) -> None:
     legend_ax.legend(handles, labels, frameon=False, fontsize=10, loc="center left")
     for ax in axes[:, 0]:
         ax.set_ylabel("Share of runs")
-    for ax in axes[1, :3]:
+    for ax in (axes[3, 0], axes[2, 1]):
         ax.set_xlabel("Money at stake")
-    axes[0, 3].xaxis.set_tick_params(labelbottom=True)
+    axes[2, 1].xaxis.set_tick_params(labelbottom=True)
     n_other = {len(v[m]) for v in sweep.values() for m in MONEY_LEVELS if m != 50_000 and v.get(m)}
     top = _title(fig, "Non-Compliance Rate vs Money at Stake",
                  f"Same scenario at ten money levels; {'/'.join(map(str, sorted(n_other)))} runs per level, 100 at £50k. "

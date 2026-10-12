@@ -14,7 +14,8 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--paper); color: var(--ink);
          font: 22px/1.4 "Inter", "Helvetica Neue", Arial, sans-serif; }
-  .page { width: 1200px; padding: 40px 40px 32px; }
+  .page { width: 1200px; height: 1500px; padding: 40px 40px 32px; display: flex; flex-direction: column; }
+  .page > * { flex-shrink: 0; }
   h1 { font-size: 42px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.01em; }
   .sub { color: var(--ink2); margin: 0 0 28px; font-size: 24px; }
   h2 { font-size: 19px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink2); margin: 0 0 14px; }
