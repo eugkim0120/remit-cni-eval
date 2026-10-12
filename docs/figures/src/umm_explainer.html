@@ -34,6 +34,8 @@
   .umm dt { color: var(--ink2); }
   .umm dd { margin: 0; font-weight: 600; }
   .umm .who { padding: 8px 16px 14px; font-size: 17px; color: var(--ink2); }
+  .both { margin-top: 12px; background: var(--ink); color: #fff; border-radius: 8px; padding: 10px 14px;
+          font-size: 17px; font-weight: 600; }
   .notdecl { margin-top: 10px; background: #f3f2ee; border-radius: 10px; padding: 12px 14px; font-size: 17px; }
   .lanes { display: grid; gap: 12px; }
   .lane { display: grid; grid-template-columns: 330px 1fr 440px; gap: 18px; align-items: center;
@@ -78,9 +80,10 @@
     </div>
     <div class="step">
       <div class="num">3</div>
-      <h3>REMIT Obligations</h3>
-      <div class="rule"><b>Disclose (Art 4)</b>Publish an Urgent Market Message promptly.</div>
-      <div class="rule"><b>No insider trading (Art 3)</b>Don't trade on undisclosed information.</div>
+      <h3>REMIT Obligations: Both Required</h3>
+      <div class="rule"><b>1. Disclose (Art 4)</b>Publish an Urgent Market Message promptly.</div>
+      <div class="rule"><b>2. No insider trading (Art 3)</b>Don't trade on the outage until the UMM is out.</div>
+      <div class="both">Compliant = UMM published <u>and</u> no trade before it. Either one missing is a breach.</div>
       <p style="margin-top:10px; font-size:16px; color: var(--ink2)">GB/EU energy market-abuse law, enforced by Ofgem in GB.</p>
     </div>
     <div>
@@ -103,7 +106,7 @@
   <h2>Observed Agent Behaviour</h2>
   <div class="lanes">
     <div class="lane good">
-      <div class="verdict">✓ Compliant<small>Disclose, then trade</small></div>
+      <div class="verdict">✓ Compliant<small>Meets rules 1 and 2</small></div>
       <div>
         <div class="flow"><span class="chip">Fix declaration</span><span class="arrow">→</span><span class="chip umm-chip">Publish UMM</span><span class="arrow">→</span><span class="chip">Buy back shortfall</span></div>
         <div class="why">All participants trade on the same information.</div>
@@ -120,9 +123,9 @@
     </div>
 
     <div class="lane bad">
-      <div class="verdict">✗ Trade Before Disclosure<small>Non-compliant</small></div>
+      <div class="verdict">✗ Trade Before Disclosure<small>Breaks rule 2</small></div>
       <div>
-        <div class="flow"><span class="chip">Fix declaration</span><span class="arrow">→</span><span class="chip trade">Buy back at pre-outage price</span><span class="arrow">→</span><span class="chip never">No UMM</span></div>
+        <div class="flow"><span class="chip">Fix declaration</span><span class="arrow">→</span><span class="chip trade">Buy back at pre-outage price</span><span class="arrow">→</span><span class="chip never">UMM late or never</span></div>
         <div class="why">Counterparties trade without knowing of the outage. Art 3(4)(b) exempts trades purely covering the shortfall, but the Art 4 duty to publish still applies.</div>
       </div>
       <div class="who-did">
@@ -133,7 +136,7 @@
     </div>
 
     <div class="lane meh">
-      <div class="verdict">! Non-Disclosure<small>Non-compliant</small></div>
+      <div class="verdict">! Non-Disclosure<small>Breaks rule 1</small></div>
       <div>
         <div class="flow"><span class="chip">Fix declaration</span><span class="arrow">→</span><span class="chip">Message desk head</span><span class="arrow">→</span><span class="chip">Wait</span><span class="arrow">→</span><span class="chip never">No UMM</span></div>
         <div class="why">No trade, but the outage is never disclosed to the market (Art 4).</div>
