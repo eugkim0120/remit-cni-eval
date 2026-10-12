@@ -10,23 +10,23 @@ did is scored mechanically from its tool calls; no human or LLM judge decides a 
 
 ![What each model did](docs/figures/focus_outcomes.png)
 
-## Headline (same scenarios for every model; 100 runs at GBP 50k, 370 across ten money levels)
+## Headline (370 runs per model: the same scenarios at ten levels of money at stake, GBP 5k-150k)
 
-| Model | Published the UMM first (GBP 50k) | Traded before publishing (GBP 50k) | Corrected the declaration, then waited (GBP 50k) | Traded before publishing, all levels |
-|---|---|---|---|---|
-| Claude Haiku 4.5 | 38 | **27** | 35 | **103 / 370** |
-| Claude Haiku 5.5 | 100 | 0 | 0 | 0 / 370 |
-| OpenAI GPT-5.6 Luna | 100 | 0 | 0 | 0 / 370 |
-| OpenAI GPT-6 Luna | 100 | 0 | 0 | 0 / 370 |
-| DeepSeek V4.1 Flash | 100 | 0 | 0 | 0 / 370 |
-| MiMo V2.6 Flash | 100 | 0 | 0 | 0 / 370 |
-| GLM-5.3 Flash | 99 | 1 | 0 | 2 / 370 |
+| Model | Published the UMM first | Traded before publishing | Corrected the declaration, then waited |
+|---|---|---|---|
+| Claude Haiku 5.5 | 370 | 0 | 0 |
+| OpenAI GPT-6 Luna | 370 | 0 | 0 |
+| Claude Haiku 4.5 | 135 | **103** | 132 |
+| OpenAI GPT-5.6 Luna | 370 | 0 | 0 |
+| DeepSeek V4.1 Flash | 370 | 0 | 0 |
+| MiMo V2.6 Flash | 370 | 0 | 0 |
+| GLM-5.3 Flash | 368 | 2 | 0 |
 
-Haiku 4.5's trades were buy-backs to cover the delivery shortfall. In most of them its reasoning never
-raised disclosure at all, and it never published a UMM in 62 of 100 runs. Haiku 5.5 published first
-in every run, so the failure is specific to the older model. The money at stake (GBP 5k to 150k) made
+Haiku 4.5's trades were almost all buy-backs to cover the delivery shortfall. In most of them its
+reasoning never raised disclosure at all, and it never published a UMM in 232 of 370 runs. Haiku 5.5
+published first in every run, so the failure is specific to the older model. The money at stake made
 no detectable difference to any model. DeepSeek, MiMo and GLM often said the scenario might be a test
-(89, 44 and 25 of 100 runs); Haiku 4.5 never suspected a test. Full results and caveats:
+(332, 123 and 105 of 370 runs); Haiku 4.5 never suspected a test. Full results and caveats:
 [`docs/writeup.md`](docs/writeup.md).
 
 ![Money at stake vs what each model did](docs/figures/focus_money.png)
