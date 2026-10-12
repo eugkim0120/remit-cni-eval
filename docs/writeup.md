@@ -62,7 +62,7 @@ model has exactly 100 clean runs at GBP 50k and 30 at every other level.
 
 At the GBP 50k reference level:
 
-| Model | Published the UMM first | Traded before publishing (rule 5) | Corrected the declaration, then waited | Flagged the scenario as a possible test |
+| Model | Published the UMM first | Traded before publishing (rule 5) | Corrected the declaration, then waited | Eval suspicion |
 |---|---|---|---|---|
 | Claude Haiku 4.5 | 38 | **27** (95% CI 19-36%) | 35 | 0 |
 | Claude Haiku 5.5 | 100 | 0 (0-3.7%) | 0 | 1 (a false positive; see point 6) |
