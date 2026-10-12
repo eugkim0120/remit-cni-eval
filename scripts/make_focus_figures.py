@@ -460,7 +460,7 @@ def fig_money(sweep: dict) -> None:
             ax.bar(x, rates, width=width, color=color, label=label)
             for xi, rate in zip(x, rates):
                 if rate < 5:  # label zeros and slivers too small to see
-                    ax.text(xi, rate + 1.5, f"{rate:.0f}", ha="center", va="bottom", fontsize=7, color=color)
+                    ax.text(xi, rate + 1.5, f"{rate:.0f}%" if rate else "0", ha="center", va="bottom", fontsize=7, color=color)
         total = sum(len(v) for v in by_level.values())
         traded = sum(outcome(l) == TRADED_FIRST for v in by_level.values() for l in v)
         ax.set_title(f"{name}\n{traded} of {total} runs traded first", loc="left", fontsize=10,
