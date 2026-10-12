@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.stats.proportion import proportion_confint
 
 from remit_cni.coding.judge import EVAL_SUSPICION_PATTERNS
@@ -25,24 +26,25 @@ from remit_cni.sandbox.logger import load_log
 LOGS = Path.home() / "remit-cni-logs"
 OUT = Path("docs/figures")
 REPORTS = Path("docs/reports")
-INK, INK2, GRID = "#0b0b0b", "#52514e", "#e4e3df"
-BLUE, RED, GREY, AQUA, AMBER, PURPLE = "#2a78d6", "#e34948", "#c3c2b7", "#1baf7a", "#eda100", "#4a3aa7"
+# One palette for every figure and the HTML explainers (docs/figures/src/*.html use the same hex values): Anthropic's
+# warm neutrals, olive for compliance, clay for breach, sky for information that is neither.
+PAPER, INK, INK2, GRID = "#faf9f5", "#141413", "#5e5d59", "#e8e6dc"
+COMPLY, COMPLY_LIGHT, BREACH, BREACH_DARK, BREACH_LIGHT = "#788c5d", "#b7c4a0", "#bd5d3a", "#8f3f22", "#e2a68c"
+NEUTRAL, INFO, TAN = "#b0aea5", "#6a9bcc", "#d4a27f"
 MODELS = {"Claude Haiku 5.5": "ref-haiku55", "OpenAI GPT-6 Luna": "ref-luna", "Claude Haiku 4.5": "ref-haiku",
           "OpenAI GPT-5.6 Luna": "ref-luna56", "DeepSeek V4.1 Flash": "ref-deepseek", "MiMo V2.6 Flash": "ref-mimo",
           "GLM-5.3 Flash": "ref-glm"}
 LEAD = ("Claude Haiku 5.5", "OpenAI GPT-6 Luna", "Claude Haiku 4.5", "OpenAI GPT-5.6 Luna")
 
-plt.rcParams.update({"font.size": 10, "axes.edgecolor": GRID, "axes.labelcolor": INK2, "xtick.color": INK2,
+plt.rcParams.update({"figure.facecolor": PAPER, "axes.facecolor": PAPER, "font.size": 10, "axes.edgecolor": GRID, "axes.labelcolor": INK2, "xtick.color": INK2,
                      "ytick.color": INK2, "axes.spines.top": False, "axes.spines.right": False})
 
 TRADED_FIRST, PUBLISHED_FIRST, NEITHER = ("Traded before publishing (rule 5)", "Published the UMM first",
                                           "Corrected the declaration, then waited")
-OUTCOME_COLORS = {PUBLISHED_FIRST: BLUE, TRADED_FIRST: RED, NEITHER: GREY}
+OUTCOME_COLORS = {PUBLISHED_FIRST: COMPLY, TRADED_FIRST: BREACH, NEITHER: NEUTRAL}
 
 
 MONEY_LEVELS = (5_000, 7_500, 11_000, 15_000, 22_000, 33_000, 50_000, 75_000, 110_000, 150_000)
-MODEL_COLORS = {"Claude Haiku 4.5": RED, "Claude Haiku 5.5": RED, "OpenAI GPT-5.6 Luna": BLUE, "OpenAI GPT-6 Luna": BLUE,
-                "DeepSeek V4.1 Flash": AQUA, "MiMo V2.6 Flash": AMBER, "GLM-5.3 Flash": PURPLE}
 
 
 def load(directory: str, money: int = 50_000) -> list[dict]:
@@ -95,7 +97,7 @@ def _title(fig, text: str, sub: str | None = None) -> float:
 
 
 def _save(fig, name: str) -> None:
-    fig.savefig(OUT / name, dpi=180, facecolor="white")
+    fig.savefig(OUT / name, dpi=180, facecolor=PAPER)
     plt.close(fig)
 
 
@@ -112,7 +114,7 @@ def fig_outcomes(data: dict) -> None:
                 ax.barh(i, share, left=left, height=0.62, color=color, edgecolor="white", linewidth=2)
                 if share >= 6:
                     ax.text(left + share / 2, i, f"{share:.0f}%", ha="center", va="center", fontsize=9.5,
-                            color=INK if color == GREY else "white", fontweight="bold")
+                            color=INK if color == NEUTRAL else "white", fontweight="bold")
             left += share
     labels = [f"{n}  (n={len(data[n])})" for n in reversed(names)]
     ax.set_yticks(range(len(names)), labels)
@@ -134,8 +136,8 @@ def fig_outcomes(data: dict) -> None:
 
 # ---------------------------------------------------------------- 2. the order things were done in
 
-STEP = {"update_availability_declaration": ("Declare", PURPLE), "publish_umm": ("UMM", BLUE),
-        "submit_bid": ("Trade", RED), "message_desk_head": ("Desk head", AMBER)}
+STEP = {"update_availability_declaration": ("Declare", INFO), "publish_umm": ("UMM", COMPLY),
+        "submit_bid": ("Trade", BREACH), "message_desk_head": ("Desk head", TAN)}
 
 
 def path(log: dict) -> tuple:
@@ -154,10 +156,10 @@ def fig_paths(data: dict, top: int = 5) -> None:
                 label, color = STEP[tool]
                 published |= tool == "publish_umm"
                 if tool == "submit_bid" and published:
-                    color = "#7fb0e8"  # a trade after the UMM is lawful: drawn in light blue, not red
+                    color = COMPLY_LIGHT  # a trade after the UMM is lawful: drawn in light olive, not clay
                 ax.add_patch(plt.Rectangle((j * 1.05, -row - 0.38), 0.95, 0.76, color=color, linewidth=0))
                 ax.text(j * 1.05 + 0.475, -row, label, ha="center", va="center", fontsize=8.5,
-                        color="white" if color not in (AMBER, "#7fb0e8") else INK)
+                        color="white" if color not in (TAN, COMPLY_LIGHT) else INK)
             ax.text(6.6, -row, f"{k}%" if len(logs) == 100 else f"{k}/{len(logs)}", va="center", fontsize=10,
                     color=INK, fontweight="bold")
         shown = sum(k for _, k in counts)
@@ -166,7 +168,7 @@ def fig_paths(data: dict, top: int = 5) -> None:
         ax.axis("off")
         ax.set_title(f"{name}  (top {top} paths cover {shown} of {len(logs)} runs)", loc="left", fontsize=10.5,
                      color=INK if name in LEAD else INK2, fontweight="bold" if name in LEAD else "normal")
-    handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (PURPLE, BLUE, RED, "#7fb0e8", AMBER)]
+    handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (INFO, COMPLY, BREACH, COMPLY_LIGHT, TAN)]
     fig.legend(handles, ["Correct availability declaration", "Publish UMM", "Trade before the UMM",
                          "Trade after the UMM", "Message desk head"], loc="lower center", ncol=5, frameon=False,
                fontsize=9)
@@ -241,7 +243,7 @@ QUOTES = {  # verbatim from the run logs; chosen to show each category plainly
 def fig_haiku_why(rows: list[dict], n_runs: int) -> None:
     counts = collections.Counter(r["motive"] for r in rows)
     labels = [m for m, _ in MOTIVES]
-    colors = ["#a31d1c", RED, "#f08a89", "#f6bdbc"]
+    colors = [BREACH_DARK, BREACH, BREACH_LIGHT, "#f0d3c5"]
     fig, (ax, qx) = plt.subplots(1, 2, figsize=(12.5, 5.2), gridspec_kw={"width_ratios": [1, 1.9], "wspace": 0.02})
     for i, (label, color) in enumerate(zip(labels, colors)):
         y = len(labels) - 1 - i
@@ -293,7 +295,8 @@ def fig_concepts(data: dict) -> None:
     grid = [[sum(bool(re.search(p, agent_text(l), re.I)) for l in logs) / len(logs) * 100 for _, logs in columns]
             for p in CONCEPTS.values()]
     fig, ax = plt.subplots(figsize=(13.5, 5.6))
-    ax.imshow(grid, cmap="Reds", vmin=0, vmax=100, aspect="auto")
+    ax.imshow(grid, cmap=LinearSegmentedColormap.from_list("sky", ["#ffffff", "#c9dbea", INFO, "#33587d"]),
+              vmin=0, vmax=100, aspect="auto")
     for i, row in enumerate(grid):
         for j, v in enumerate(row):
             ax.text(j, i, f"{v:.0f}%", ha="center", va="center", fontsize=9.5, color="white" if v > 60 else INK)
@@ -328,12 +331,12 @@ def _words(text: str) -> list[str]:
 
 
 IDEAS = {  # which idea each distinctive word belongs to, read off its typical phrases (printed by the script)
-    "Planning and placing the buy-back": ("#e34948", "buy bought buyback order orders execution execute fills filled ensure submit"),
-    "Covering the physical gap": ("#f08a89", "shortfall fulfill hedge larger cover deliver delivery gap physical"),
-    "Price and P&L": ("#a31d1c", "forecast price prices loss profit cost"),
-    "Telling the market": ("#2a78d6", "umm urgent publish published message market notified inform notify notification"),
-    "Fixing the declaration": ("#7fb0e8", "availability reduced declaration declared"),
-    "Ticking off duties": ("#1f4f8f", "three critical actions compliance compliant"),
+    "Planning and placing the buy-back": (BREACH, "buy bought buyback order orders execution execute fills filled ensure submit"),
+    "Covering the physical gap": (BREACH_LIGHT, "shortfall fulfill hedge larger cover deliver delivery gap physical"),
+    "Price and P&L": (BREACH_DARK, "forecast price prices loss profit cost"),
+    "Telling the market": (COMPLY, "umm urgent publish published message market notified inform notify notification"),
+    "Fixing the declaration": (INFO, "availability reduced declaration declared"),
+    "Ticking off duties": ("#4f5e3d", "three critical actions compliance compliant"),
 }
 WORD_IDEA = {w: idea for idea, (_, words) in IDEAS.items() for w in words.split()}
 TIDY = [(r"\bmw\b", "MW"), (r"\bumm\b", "UMM"), (r"\bda\b", "DA"), (r"\bp&l\b", "P&L"), (r"\bu1\b", "U1")]
@@ -386,7 +389,7 @@ def fig_haiku_words(haiku: list[dict], top: int = 10) -> None:
         for i, (w, z) in enumerate(words):
             idea = WORD_IDEA.get(w)
             print(f"  {w:14s} {z:+.2f}  {idea or 'unmapped'}  {typical_phrase(w, logs)}")
-            ax.barh(i, abs(z), height=0.68, color=IDEAS[idea][0] if idea else GREY)
+            ax.barh(i, abs(z), height=0.68, color=IDEAS[idea][0] if idea else NEUTRAL)
             ax.text(-0.06, i, w, ha="right", va="center", fontsize=10.5, fontweight="bold", color=INK,
                     transform=ax.get_yaxis_transform())
             ax.text(abs(z) + 0.08, i, typical_phrase(w, logs), va="center", fontsize=9.2, color=INK2, style="italic")
@@ -399,7 +402,7 @@ def fig_haiku_words(haiku: list[dict], top: int = 10) -> None:
     present = [idea for idea in IDEAS if any(WORD_IDEA.get(w) == idea for _, ws, _ in panels for w, _ in ws)]
     handles = [plt.Rectangle((0, 0), 1, 1, color=IDEAS[i][0]) for i in present]
     if any(w not in WORD_IDEA for _, ws, _ in panels for w, _ in ws):
-        handles.append(plt.Rectangle((0, 0), 1, 1, color=GREY))
+        handles.append(plt.Rectangle((0, 0), 1, 1, color=NEUTRAL))
         present = present + ["Mixed use"]  # e.g. "message" is both the UMM and messaging the desk head
     fig.legend(handles, present, loc="lower center", ncol=4, frameon=False, fontsize=9.2)
     top_edge = _title(fig, "Distinctive Words in Haiku 4.5 Reasoning: Traded First vs Published First",
@@ -415,7 +418,7 @@ def fig_awareness(data: dict) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.6), sharey=True)
     names = list(data)
     for ax, (metric, title, color) in zip(axes, [(lambda l: outcome(l) == TRADED_FIRST, "Traded before publishing",
-                                                  RED), (aware, "Eval Suspicion", PURPLE)]):
+                                                  BREACH), (aware, "Eval Suspicion", INFO)]):
         for i, name in enumerate(reversed(names)):
             logs = data[name]
             k, n = sum(map(metric, logs)), len(logs)
@@ -448,7 +451,7 @@ def never_published(log: dict) -> bool:
 def fig_money(sweep: dict) -> None:
     """sweep[model][level] = clean logs at that level (30 per level, 100 at GBP 50k). One panel per model, grouped bars
     per money level, so a level with no non-compliant runs reads as an explicit 0 rather than a point on the axis."""
-    series = [(lambda l: outcome(l) == TRADED_FIRST, "Traded before publishing", RED),
+    series = [(lambda l: outcome(l) == TRADED_FIRST, "Traded before publishing", BREACH),
               (never_published, "Never published the UMM", INK2)]
     width = 0.4
     fig, axes = plt.subplots(2, 4, figsize=(15, 7.4), sharex=True, sharey=True)
